@@ -5,14 +5,16 @@ import {
   MapPin, 
   Home, 
   Maximize, 
-  Euro, 
+  DollarSign, 
   Phone, 
   Mail, 
   User,
   Calendar,
   Send,
   ArrowLeft,
-  Star
+  Star,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 
 interface Property {
@@ -37,6 +39,7 @@ const PropertyDetails: React.FC = () => {
   const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
   const [showContactForm, setShowContactForm] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [messageForm, setMessageForm] = useState({
     name: user?.name || '',
     email: user?.email || '',
@@ -118,7 +121,24 @@ const PropertyDetails: React.FC = () => {
     );
   }
 
-  const defaultImage = 'https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg?auto=compress&cs=tinysrgb&w=1200';
+  const defaultImages = [
+    'https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    'https://images.pexels.com/photos/271624/pexels-photo-271624.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    'https://images.pexels.com/photos/1571460/pexels-photo-1571460.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    'https://images.pexels.com/photos/1571467/pexels-photo-1571467.jpeg?auto=compress&cs=tinysrgb&w=1200',
+    'https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg?auto=compress&cs=tinysrgb&w=1200'
+  ];
+
+  const displayImages = property?.images && property.images.length > 0 ? property.images : defaultImages;
+
+  const nextImage = () => {
+    setCurrentImageIndex((prev) => (prev + 1) % displayImages.length);
+  };
+
+  const prevImage = () => {
+    setCurrentImageIndex((prev) => (prev - 1 + displayImages.length) % displayImages.length);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -135,20 +155,70 @@ const PropertyDetails: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Property Images and Info */}
           <div className="lg:col-span-2">
-            {/* Main Image */}
-            <div className="relative h-96 rounded-2xl overflow-hidden mb-6">
+            {/* Image Carousel */}
+            <div className="relative h-96 rounded-2xl overflow-hidden mb-6 group">
               <img
-                src={property.images?.[0] || defaultImage}
-                alt={property.title}
-                className="w-full h-full object-cover"
+                src={displayImages[currentImageIndex]}
+                alt={`${property.title} - Image ${currentImageIndex + 1}`}
+                className="w-full h-full object-cover transition-transform duration-300"
               />
+              
+              {/* Price Badge */}
               <div className="absolute top-4 right-4 bg-white bg-opacity-90 backdrop-blur-sm px-4 py-2 rounded-full">
                 <span className="text-lg font-bold text-gray-900 flex items-center">
-                  <Euro className="w-4 h-4 mr-1" />
-                  {property.price}€/mois
+                  <DollarSign className="w-4 h-4 mr-1" />
+                  ${property.price}/mois
                 </span>
               </div>
+
+              {/* Navigation Arrows */}
+              {displayImages.length > 1 && (
+                <>
+                  <button
+                    onClick={prevImage}
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-opacity-70"
+                  >
+                    <ChevronLeft className="w-6 h-6" />
+                  </button>
+                  <button
+                    onClick={nextImage}
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-opacity-70"
+                  >
+                    <ChevronRight className="w-6 h-6" />
+                  </button>
+                </>
+              )}
+
+              {/* Image Counter */}
+              {displayImages.length > 1 && (
+                <div className="absolute bottom-4 left-4 bg-black bg-opacity-50 text-white px-3 py-1 rounded-full text-sm">
+                  {currentImageIndex + 1} / {displayImages.length}
+                </div>
+              )}
             </div>
+
+            {/* Thumbnail Strip */}
+            {displayImages.length > 1 && (
+              <div className="flex space-x-2 mb-6 overflow-x-auto pb-2">
+                {displayImages.map((image, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentImageIndex(index)}
+                    className={`flex-shrink-0 w-20 h-16 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
+                      index === currentImageIndex 
+                        ? 'border-blue-500 ring-2 ring-blue-200' 
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <img
+                      src={image}
+                      alt={`Miniature ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* Property Details */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">

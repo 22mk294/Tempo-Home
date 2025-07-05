@@ -10,7 +10,7 @@ const Register: React.FC = () => {
     password: '',
     confirmPassword: '',
     phone: '',
-    type: 'tenant' as 'owner' | 'tenant'
+    type: 'tenant' as 'owner' | 'tenant' | 'admin'
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -68,7 +68,7 @@ const Register: React.FC = () => {
               <UserCheck className="w-8 h-8 text-white" />
             </div>
             <h2 className="text-3xl font-bold text-gray-900">Inscription</h2>
-            <p className="text-gray-600 mt-2">Créez votre compte HomeRent</p>
+            <p className="text-gray-600 mt-2">Créez votre compte Tempo/Home</p>
           </div>
 
           {error && (
@@ -148,6 +148,7 @@ const Register: React.FC = () => {
               >
                 <option value="tenant">Locataire - Je recherche un logement</option>
                 <option value="owner">Propriétaire - Je propose un logement</option>
+                <option value="admin">Administrateur - Gestion de la plateforme</option>
               </select>
             </div>
 

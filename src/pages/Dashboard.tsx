@@ -11,7 +11,9 @@ import {
   Trash2,
   Calendar,
   MapPin,
-  Euro
+  DollarSign,
+  CheckCircle,
+  XCircle
 } from 'lucide-react';
 
 interface Property {
@@ -25,6 +27,7 @@ interface Property {
   images: string[];
   available: boolean;
   createdAt: string;
+  views: number;
 }
 
 interface Message {
@@ -64,8 +67,7 @@ const Dashboard: React.FC = () => {
       if (user?.type === 'owner') {
         await Promise.all([
           fetchMyProperties(),
-          fetchMyMessages(),
-          fetchStats()
+          fetchMyMessages()
         ]);
       } else {
         await fetchMyMessages();
@@ -80,14 +82,27 @@ const Dashboard: React.FC = () => {
   const fetchMyProperties = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('/api/maisons/my-properties', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setProperties(data);
+      const [propertiesResponse, statsResponse] = await Promise.all([
+        fetch('/api/maisons/my-properties', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }),
+        fetch('/api/maisons/stats', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+      ]);
+
+      if (propertiesResponse.ok) {
+        const propertiesData = await propertiesResponse.json();
+        setProperties(propertiesData);
+      }
+
+      if (statsResponse.ok) {
+        const statsData = await statsResponse.json();
+        setStats(prevStats => ({
+          ...prevStats,
+          totalProperties: statsData.totalProperties,
+          totalViews: statsData.totalViews
+        }));
       }
     } catch (error) {
       console.error('Error fetching properties:', error);
@@ -106,26 +121,17 @@ const Dashboard: React.FC = () => {
       if (response.ok) {
         const data = await response.json();
         setMessages(data);
+        
+        // Update stats for messages count
+        if (user?.type === 'owner') {
+          setStats(prevStats => ({
+            ...prevStats,
+            totalMessages: data.length
+          }));
+        }
       }
     } catch (error) {
       console.error('Error fetching messages:', error);
-    }
-  };
-
-  const fetchStats = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/maisons/stats', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setStats(data);
-      }
-    } catch (error) {
-      console.error('Error fetching stats:', error);
     }
   };
 
@@ -147,6 +153,28 @@ const Dashboard: React.FC = () => {
       }
     } catch (error) {
       console.error('Error deleting property:', error);
+    }
+  };
+
+  const toggleAvailability = async (id: number, currentStatus: boolean) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/maisons/${id}/availability`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ available: !currentStatus })
+      });
+      
+      if (response.ok) {
+        setProperties(properties.map(p => 
+          p.id === id ? { ...p, available: !currentStatus } : p
+        ));
+      }
+    } catch (error) {
+      console.error('Error toggling availability:', error);
     }
   };
 
@@ -235,15 +263,28 @@ const Dashboard: React.FC = () => {
                     {properties.slice(0, 5).map((property) => (
                       <div key={property.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                         <div className="flex-1">
-                          <h3 className="font-medium text-gray-900">{property.title}</h3>
+                          <div className="flex items-center space-x-2">
+                            <h3 className="font-medium text-gray-900">{property.title}</h3>
+                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                              property.available 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                              {property.available ? 'Disponible' : 'Indisponible'}
+                            </span>
+                          </div>
                           <div className="flex items-center space-x-4 mt-1 text-sm text-gray-600">
                             <span className="flex items-center">
                               <MapPin className="w-3 h-3 mr-1" />
                               {property.location}
                             </span>
                             <span className="flex items-center">
-                              <Euro className="w-3 h-3 mr-1" />
-                              {property.price}€/mois
+                              <DollarSign className="w-3 h-3 mr-1" />
+                              ${property.price}/mois
+                            </span>
+                            <span className="flex items-center">
+                              <Eye className="w-3 h-3 mr-1" />
+                              {property.views || 0} vues
                             </span>
                             <span className="flex items-center">
                               <Calendar className="w-3 h-3 mr-1" />
@@ -260,11 +301,23 @@ const Dashboard: React.FC = () => {
                             <Eye className="w-4 h-4" />
                           </Link>
                           <button
-                            className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                            onClick={() => toggleAvailability(property.id, property.available)}
+                            className={`p-2 rounded-lg transition-colors ${
+                              property.available 
+                                ? 'text-orange-600 hover:bg-orange-50' 
+                                : 'text-green-600 hover:bg-green-50'
+                            }`}
+                            title={property.available ? 'Marquer comme loué' : 'Marquer comme disponible'}
+                          >
+                            {property.available ? <XCircle className="w-4 h-4" /> : <CheckCircle className="w-4 h-4" />}
+                          </button>
+                          <Link
+                            to={`/edit-property/${property.id}`}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                             title="Modifier"
                           >
                             <Edit className="w-4 h-4" />
-                          </button>
+                          </Link>
                           <button
                             onClick={() => deleteProperty(property.id)}
                             className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"

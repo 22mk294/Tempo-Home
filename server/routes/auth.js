@@ -12,7 +12,7 @@ router.post('/register', [
   body('email').isEmail().withMessage('Email invalide'),
   body('password').isLength({ min: 6 }).withMessage('Le mot de passe doit contenir au moins 6 caractères'),
   body('phone').trim().isLength({ min: 10 }).withMessage('Numéro de téléphone invalide'),
-  body('type').isIn(['owner', 'tenant']).withMessage('Type de compte invalide')
+  body('type').isIn(['owner', 'tenant', 'admin']).withMessage('Type de compte invalide')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);

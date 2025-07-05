@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, MapPin, Home, Maximize, Euro } from 'lucide-react';
+import { Search, MapPin, Home, Maximize, DollarSign } from 'lucide-react';
 
 interface SearchFiltersProps {
   onFilterChange: (filters: {
@@ -84,20 +84,20 @@ const SearchFilters: React.FC<SearchFiltersProps> = ({ onFilterChange }) => {
         {/* Price Range */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            <Euro className="w-4 h-4 inline mr-1" />
+            <DollarSign className="w-4 h-4 inline mr-1" />
             Budget mensuel
           </label>
           <div className="grid grid-cols-2 gap-3">
             <input
               type="number"
-              placeholder="Min €"
+              placeholder="Min $"
               value={filters.minPrice}
               onChange={(e) => handleFilterChange('minPrice', e.target.value)}
               className="px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
             <input
               type="number"
-              placeholder="Max €"
+              placeholder="Max $"
               value={filters.maxPrice}
               onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
               className="px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"

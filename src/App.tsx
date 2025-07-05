@@ -6,8 +6,10 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
+import AdminDashboard from './pages/AdminDashboard';
 import PropertyDetails from './pages/PropertyDetails';
 import CreateProperty from './pages/CreateProperty';
+import EditProperty from './pages/EditProperty';
 import Messages from './pages/Messages';
 import Profile from './pages/Profile';
 import Footer from './components/Footer';
@@ -73,10 +75,26 @@ function AppContent() {
             } 
           />
           <Route 
+            path="/admin" 
+            element={
+              <ProtectedRoute>
+                <AdminDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
             path="/create-property" 
             element={
               <ProtectedRoute>
                 <CreateProperty />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/edit-property/:id" 
+            element={
+              <ProtectedRoute>
+                <EditProperty />
               </ProtectedRoute>
             } 
           />

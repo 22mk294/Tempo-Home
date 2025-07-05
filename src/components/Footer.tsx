@@ -12,7 +12,7 @@ const Footer: React.FC = () => {
               <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
                 <Building className="w-5 h-5 text-white" />
               </div>
-              <span className="text-2xl font-bold text-white">HomeRent</span>
+              <span className="text-2xl font-bold text-white">Tempo/Home</span>
             </div>
             <p className="text-gray-300 mb-6 max-w-md">
               La plateforme de référence pour la location de maisons et appartements entre particuliers. 
@@ -21,7 +21,7 @@ const Footer: React.FC = () => {
             <div className="flex space-x-4">
               <div className="flex items-center space-x-2 text-gray-300">
                 <Mail className="w-4 h-4" />
-                <span>contact@homerent.fr</span>
+                <span>contact@tempohome.fr</span>
               </div>
               <div className="flex items-center space-x-2 text-gray-300">
                 <Phone className="w-4 h-4" />
@@ -54,7 +54,7 @@ const Footer: React.FC = () => {
         </div>
 
         <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-          <p>&copy; 2024 HomeRent. Tous droits réservés.</p>
+          <p>&copy; 2024 Tempo/Home. Tous droits réservés.</p>
         </div>
       </div>
     </footer>

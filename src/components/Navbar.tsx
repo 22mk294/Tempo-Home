@@ -9,7 +9,8 @@ import {
   LogOut, 
   Menu, 
   X,
-  Building
+  Building,
+  BarChart3
 } from 'lucide-react';
 
 const Navbar: React.FC = () => {
@@ -39,7 +40,7 @@ const Navbar: React.FC = () => {
               <Building className="w-5 h-5 text-white" />
             </div>
             <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
-              HomeRent
+              Tempo/Home
             </span>
           </Link>
 
@@ -70,6 +71,16 @@ const Navbar: React.FC = () => {
                   >
                     <Plus className="w-4 h-4" />
                     <span>Créer une annonce</span>
+                  </Link>
+                )}
+
+                {user.type === 'admin' && (
+                  <Link 
+                    to="/admin" 
+                    className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors px-3 py-2 rounded-lg hover:bg-blue-50"
+                  >
+                    <BarChart3 className="w-4 h-4" />
+                    <span>Administration</span>
                   </Link>
                 )}
                 
@@ -153,6 +164,17 @@ const Navbar: React.FC = () => {
                     >
                       <Plus className="w-5 h-5" />
                       <span>Créer une annonce</span>
+                    </Link>
+                  )}
+
+                  {user.type === 'admin' && (
+                    <Link 
+                      to="/admin" 
+                      className="flex items-center space-x-3 text-gray-700 hover:text-blue-600 transition-colors px-4 py-3 rounded-lg hover:bg-blue-50"
+                      onClick={closeMenu}
+                    >
+                      <BarChart3 className="w-5 h-5" />
+                      <span>Administration</span>
                     </Link>
                   )}
                   

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, Home, Maximize, Euro } from 'lucide-react';
+import { MapPin, Home, Maximize, DollarSign } from 'lucide-react';
 
 interface Property {
   id: number;
@@ -34,8 +34,8 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
         />
         <div className="absolute top-4 right-4 bg-white bg-opacity-90 backdrop-blur-sm px-3 py-1 rounded-full">
           <span className="text-sm font-semibold text-gray-900 flex items-center">
-            <Euro className="w-3 h-3 mr-1" />
-            {property.price}€/mois
+            <DollarSign className="w-3 h-3 mr-1" />
+            ${property.price}/mois
           </span>
         </div>
       </div>

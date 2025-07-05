@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import ImageUploader from '../components/ImageUploader';
 import { 
@@ -9,25 +9,75 @@ import {
   Maximize, 
   FileText, 
   Camera,
+  Save,
+  ArrowLeft,
   Plus,
   Image
 } from 'lucide-react';
 
-const CreateProperty: React.FC = () => {
+interface PropertyForm {
+  title: string;
+  description: string;
+  price: string;
+  location: string;
+  nbRooms: string;
+  surface: string;
+  images: string[];
+  available: boolean;
+}
+
+const EditProperty: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [formData, setFormData] = useState({
+  const [imageUrl, setImageUrl] = useState('');
+  const [formData, setFormData] = useState<PropertyForm>({
     title: '',
     description: '',
     price: '',
     location: '',
     nbRooms: '',
     surface: '',
-    images: [] as string[]
+    images: [],
+    available: true
   });
-  const [imageUrl, setImageUrl] = useState('');
+
+  useEffect(() => {
+    if (id) {
+      fetchProperty();
+    }
+  }, [id]);
+
+  const fetchProperty = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`/api/maisons/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const property = await response.json();
+        setFormData({
+          title: property.title,
+          description: property.description,
+          price: property.price.toString(),
+          location: property.location,
+          nbRooms: property.nbRooms.toString(),
+          surface: property.surface.toString(),
+          images: property.images || [],
+          available: property.available
+        });
+      } else {
+        setError('Propriété introuvable');
+      }
+    } catch (error) {
+      setError('Erreur lors du chargement de la propriété');
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,8 +93,8 @@ const CreateProperty: React.FC = () => {
         surface: parseFloat(formData.surface)
       };
       
-      const response = await fetch('/api/maisons', {
-        method: 'POST',
+      const response = await fetch(`/api/maisons/${id}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
@@ -62,21 +112,31 @@ const CreateProperty: React.FC = () => {
           const errorMessages = data.errors.map((err: any) => err.msg).join(', ');
           setError(errorMessages);
         } else {
-          setError(data.error || 'Erreur lors de la création de l\'annonce');
+          setError(data.error || 'Erreur lors de la modification de l\'annonce');
         }
       }
     } catch (error) {
-      setError('Erreur réseau lors de la création');
+      setError('Erreur réseau lors de la modification');
     } finally {
       setLoading(false);
     }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    const { name, value, type } = e.target;
+    
+    if (type === 'checkbox') {
+      const checked = (e.target as HTMLInputElement).checked;
+      setFormData({
+        ...formData,
+        [name]: checked
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value
+      });
+    }
   };
 
   const addImage = () => {
@@ -106,14 +166,8 @@ const CreateProperty: React.FC = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Accès refusé</h2>
-          <p className="text-gray-600 mb-4">Seuls les propriétaires peuvent créer des annonces</p>
-          <button 
-            onClick={() => navigate('/dashboard')}
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Retour au tableau de bord
-          </button>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Accès refusé</h1>
+          <p className="text-gray-600">Seuls les propriétaires peuvent modifier des annonces.</p>
         </div>
       </div>
     );
@@ -121,24 +175,32 @@ const CreateProperty: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-6">
-            <h1 className="text-3xl font-bold text-white flex items-center">
-              <Home className="w-8 h-8 mr-3" />
-              Créer une annonce
-            </h1>
-            <p className="text-blue-100 mt-2">Partagez votre bien avec des locataires de confiance</p>
-          </div>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="flex items-center text-gray-600 hover:text-gray-900 mb-4"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Retour au tableau de bord
+          </button>
+          <h1 className="text-3xl font-bold text-gray-900">Modifier l'annonce</h1>
+          <p className="text-gray-600 mt-2">
+            Modifiez les informations de votre propriété
+          </p>
+        </div>
 
+        {/* Form */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
           {error && (
-            <div className="mx-8 mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-800 text-sm">{error}</p>
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-800">{error}</p>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="p-8 space-y-8">
-            {/* Basic Information */}
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* General Information */}
             <div>
               <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
                 <FileText className="w-5 h-5 mr-2 text-blue-600" />
@@ -240,6 +302,22 @@ const CreateProperty: React.FC = () => {
                   />
                 </div>
               </div>
+            </div>
+
+            {/* Availability */}
+            <div>
+              <label className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  name="available"
+                  checked={formData.available}
+                  onChange={handleChange}
+                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                />
+                <span className="text-sm font-medium text-gray-700">
+                  Propriété disponible à la location
+                </span>
+              </label>
             </div>
 
             {/* Description */}
@@ -369,40 +447,32 @@ const CreateProperty: React.FC = () => {
             </div>
 
             {/* Submit Button */}
-            <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
-              <button
-                type="button"
-                onClick={() => navigate('/dashboard')}
-                className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                Annuler
-              </button>
+            <div className="flex items-center space-x-4 pt-6 border-t border-gray-200">
               <button
                 type="submit"
                 disabled={loading}
-                className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center space-x-2 bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
-                  <div className="flex items-center">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                    Création...
-                  </div>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                 ) : (
-                  'Publier l\'annonce'
+                  <Save className="w-4 h-4" />
                 )}
+                <span>{loading ? 'Modification...' : 'Modifier l\'annonce'}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate('/dashboard')}
+                className="px-8 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Annuler
               </button>
             </div>
           </form>
-        </div>
-
-        <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-          <p className="text-sm text-blue-800 text-center">
-            💡 <strong>Conseil :</strong> Ajoutez plusieurs photos de qualité pour attirer plus de locataires potentiels
-          </p>
         </div>
       </div>
     </div>
   );
 };
 
-export default CreateProperty;
+export default EditProperty;

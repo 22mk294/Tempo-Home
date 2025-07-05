@@ -29,33 +29,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get property by ID
-router.get('/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const [properties] = await pool.execute(`
-      SELECT m.*, u.name as ownerName, u.email as ownerEmail, u.phone as ownerPhone
-      FROM maisons m 
-      JOIN users u ON m.ownerId = u.id 
-      WHERE m.id = ?
-    `, [id]);
-
-    if (properties.length === 0) {
-      return res.status(404).json({ error: 'Propriété introuvable' });
-    }
-
-    const property = properties[0];
-    property.images = property.images ? JSON.parse(property.images) : [];
-
-    res.json(property);
-  } catch (error) {
-    console.error('Get property error:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
-});
-
-// Get my properties (owner only)
+// Get my properties (owner only) - MUST be before /:id route
 router.get('/my-properties', authenticateToken, async (req, res) => {
   try {
     if (req.user.type !== 'owner') {
@@ -79,7 +53,7 @@ router.get('/my-properties', authenticateToken, async (req, res) => {
   }
 });
 
-// Get stats (owner only)
+// Get stats (owner only) - MUST be before /:id route
 router.get('/stats', authenticateToken, async (req, res) => {
   try {
     if (req.user.type !== 'owner') {
@@ -91,15 +65,20 @@ router.get('/stats', authenticateToken, async (req, res) => {
       [req.user.id]
     );
 
-    const [messagesCount] = await pool.execute(
-      'SELECT COUNT(*) as count FROM messages m JOIN maisons ma ON m.maisonId = ma.id WHERE ma.ownerId = ?',
-      [req.user.id]
-    );
+    const [messagesCount] = await pool.execute(`
+      SELECT COUNT(*) as count FROM messages m
+      JOIN maisons ma ON m.maisonId = ma.id
+      WHERE ma.ownerId = ?
+    `, [req.user.id]);
+
+    const [totalViews] = await pool.execute(`
+      SELECT SUM(views) as total FROM maisons WHERE ownerId = ?
+    `, [req.user.id]);
 
     res.json({
       totalProperties: propertiesCount[0].count,
       totalMessages: messagesCount[0].count,
-      totalViews: Math.floor(Math.random() * 1000) // Placeholder for views
+      totalViews: totalViews[0].total || 0
     });
   } catch (error) {
     console.error('Get stats error:', error);
@@ -107,12 +86,54 @@ router.get('/stats', authenticateToken, async (req, res) => {
   }
 });
 
+// Get property by ID - MUST be after specific routes
+router.get('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const [properties] = await pool.execute(`
+      SELECT m.*, u.name as ownerName, u.email as ownerEmail, u.phone as ownerPhone
+      FROM maisons m 
+      JOIN users u ON m.ownerId = u.id 
+      WHERE m.id = ?
+    `, [id]);
+
+    if (properties.length === 0) {
+      return res.status(404).json({ error: 'Propriété introuvable' });
+    }
+
+    // Increment view count
+    await pool.execute(
+      'UPDATE maisons SET views = views + 1 WHERE id = ?',
+      [id]
+    );
+
+    // Log the view in property_views table
+    const clientIp = req.ip || req.connection.remoteAddress;
+    const userAgent = req.get('User-Agent') || '';
+    
+    await pool.execute(`
+      INSERT INTO property_views (maisonId, viewerIp, userAgent) 
+      VALUES (?, ?, ?)
+    `, [id, clientIp, userAgent]);
+
+    const property = properties[0];
+    property.images = property.images ? JSON.parse(property.images) : [];
+    property.views = property.views + 1; // Update the views count in response
+
+    res.json(property);
+  } catch (error) {
+    console.error('Get property error:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 // Create property (owner only)
 router.post('/', authenticateToken, [
-  body('title').trim().isLength({ min: 5 }).withMessage('Le titre doit contenir au moins 5 caractères'),
-  body('description').trim().isLength({ min: 20 }).withMessage('La description doit contenir au moins 20 caractères'),
+  body('title').trim().isLength({ min: 3 }).withMessage('Le titre doit contenir au moins 3 caractères'),
+  body('description').trim().isLength({ min: 10 }).withMessage('La description doit contenir au moins 10 caractères'),
   body('price').isNumeric().withMessage('Le prix doit être un nombre'),
-  body('location').trim().isLength({ min: 3 }).withMessage('La localisation est requise'),
+  body('location').trim().isLength({ min: 2 }).withMessage('La localisation est requise'),
   body('nbRooms').isInt({ min: 1 }).withMessage('Le nombre de pièces doit être un entier positif'),
   body('surface').isNumeric().withMessage('La superficie doit être un nombre')
 ], async (req, res) => {
@@ -189,6 +210,37 @@ router.put('/:id', authenticateToken, [
   } catch (error) {
     console.error('Update property error:', error);
     res.status(500).json({ error: 'Erreur serveur lors de la mise à jour' });
+  }
+});
+
+// Toggle property availability (owner only)
+router.patch('/:id/availability', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { available } = req.body;
+
+    // Check if property exists and belongs to user
+    const [properties] = await pool.execute(
+      'SELECT * FROM maisons WHERE id = ? AND ownerId = ?',
+      [id, req.user.id]
+    );
+
+    if (properties.length === 0) {
+      return res.status(404).json({ error: 'Propriété introuvable ou accès refusé' });
+    }
+
+    await pool.execute(
+      'UPDATE maisons SET available = ? WHERE id = ? AND ownerId = ?',
+      [available, id, req.user.id]
+    );
+
+    res.json({ 
+      message: available ? 'Propriété marquée comme disponible' : 'Propriété marquée comme indisponible',
+      available
+    });
+  } catch (error) {
+    console.error('Toggle availability error:', error);
+    res.status(500).json({ error: 'Erreur serveur lors de la mise à jour du statut' });
   }
 });
 

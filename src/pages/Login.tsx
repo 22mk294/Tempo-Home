@@ -50,7 +50,7 @@ const Login: React.FC = () => {
               <LogIn className="w-8 h-8 text-white" />
             </div>
             <h2 className="text-3xl font-bold text-gray-900">Connexion</h2>
-            <p className="text-gray-600 mt-2">Accédez à votre compte HomeRent</p>
+            <p className="text-gray-600 mt-2">Accédez à votre compte Tempo/Home</p>
           </div>
 
           {error && (

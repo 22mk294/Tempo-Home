@@ -99,8 +99,12 @@ const Home: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 text-white overflow-hidden">
-        <div className="absolute inset-0 bg-black opacity-20"></div>
+      <section 
+        className="relative text-white overflow-hidden bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=1920')`
+        }}
+      >
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 lg:py-32">
           <div className="text-center">
             <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
@@ -139,7 +143,7 @@ const Home: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Pourquoi choisir HomeRent ?
+              Pourquoi choisir Tempo/Home ?
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               Une plateforme moderne, sécurisée et facile à utiliser pour tous vos besoins de location
@@ -152,7 +156,7 @@ const Home: React.FC = () => {
                 <HomeIcon className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">Large choix de logements</h3>
-              <p className="text-gray-600">Des milliers d'annonces vérifiées dans toute la France</p>
+              <p className="text-gray-600">Des milliers d'annonces vérifiées dans tout le haut Katanga</p>
             </div>
 
             <div className="text-center p-8 rounded-2xl bg-gradient-to-br from-green-50 to-green-100 hover:shadow-lg transition-all duration-300">

@@ -5,7 +5,7 @@ interface User {
   name: string;
   email: string;
   phone: string;
-  type: 'owner' | 'tenant';
+  type: 'owner' | 'tenant' | 'admin';
 }
 
 interface AuthContextType {
@@ -22,7 +22,7 @@ interface RegisterData {
   email: string;
   password: string;
   phone: string;
-  type: 'owner' | 'tenant';
+  type: 'owner' | 'tenant' | 'admin';
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
