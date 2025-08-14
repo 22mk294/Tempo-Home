@@ -21,11 +21,11 @@ const Footer: React.FC = () => {
             <div className="flex space-x-4">
               <div className="flex items-center space-x-2 text-gray-300">
                 <Mail className="w-4 h-4" />
-                <span>contact@tempohome.fr</span>
+                <span>joelmikejm519@gmail.com</span>
               </div>
               <div className="flex items-center space-x-2 text-gray-300">
                 <Phone className="w-4 h-4" />
-                <span>01 23 45 67 89</span>
+                <span>+243 858924096</span>
               </div>
             </div>
           </div>

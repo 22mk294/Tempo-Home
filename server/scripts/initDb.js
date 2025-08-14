@@ -15,8 +15,8 @@ const initDatabase = async () => {
     connection = await mysql.createConnection(dbConfig);
     
     console.log('Creating database...');
-    await connection.execute('CREATE DATABASE IF NOT EXISTS tempo_home CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
-    await connection.query('USE tempo_home');
+  await connection.execute('CREATE DATABASE IF NOT EXISTS rental_platform CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
+  await connection.query('USE rental_platform');
 
     console.log('Dropping existing tables if they exist...');
     // On supprime dans l'ordre inverse à cause des clés étrangères
